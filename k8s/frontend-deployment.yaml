@@ -1,0 +1,39 @@
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: three-tier
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: techgangsta/mongo-3tier-frontend:1.2
+        ports:
+        - containerPort: 80
+        env:
+        - name: BACKEND_URL
+          value: http://backend-service:3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: three-tier
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer
+      

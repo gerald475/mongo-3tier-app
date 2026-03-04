@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: three-tier
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: techgangsta/mongo-3tier-backend:1.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MONGO_URL
+          value: mongodb://admin:password@mongo-service:27017/myapp?authSource=admin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: three-tier
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: LoadBalancer

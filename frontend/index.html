@@ -22,11 +22,24 @@
     
     <script>
         async function viewDb() {
-            const res = await fetch("http://localhost:3000/db/users");
-            const data = await res.json();
+        try {
+            // Change this from a relative path to the absolute port-forwarded URL
+            const res = await fetch("http://127.0.0.1:3000/db/users"); 
+        
+            if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            // ... rest of your code
 
-            document.getElementById("dbOutput").textContent =
-                JSON.stringify(data, null, 2);
+                const data = await res.json();
+
+                document.getElementById("dbOutput").textContent =
+                    JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById("dbOutput").textContent =
+                    "Error fetching DB: " + err;
+                console.error(err);
+            }
         }
     </script>
 </body>

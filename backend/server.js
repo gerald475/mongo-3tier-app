@@ -11,13 +11,19 @@ const PORT = 3000;
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = "myapp";
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:8080",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(express.json());
+
 // Serve frontend
-app.use(
-  express.static(path.join(__dirname, "../frontend/public"))
-);
+//app.use(
+ // express.static(path.join(__dirname, "../frontend/public"))
+//);
 
 let db;
 
