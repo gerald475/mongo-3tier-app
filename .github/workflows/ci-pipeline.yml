@@ -71,3 +71,17 @@ jobs:
 
       - name: Build Frontend Image
         run: docker build ./frontend -t frontend-test:latest
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history so it can scan previous commits too
+
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: false # This stops the pipeline if a secret is found!
