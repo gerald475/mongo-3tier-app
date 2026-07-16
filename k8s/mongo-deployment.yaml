@@ -1,4 +1,3 @@
-# mongo-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,14 +22,20 @@ spec:
         - name: MONGO_INITDB_DATABASE
           value: testdb
         - name: MONGO_INITDB_ROOT_USERNAME
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-username
         - name: MONGO_INITDB_ROOT_PASSWORD
-          value: password
-        # --- ADD THIS SECTION ---
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-password
+
         volumeMounts:
         - name: mongo-storage
-          mountPath: /data/db   # This is where MongoDB stores its data
-      # --- ADD THIS SECTION ---
+          mountPath: /data/db
+
       volumes:
       - name: mongo-storage
         persistentVolumeClaim:

@@ -3,3 +3,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: three-tier
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: auth

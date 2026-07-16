@@ -19,8 +19,18 @@ spec:
         ports:
         - containerPort: 3000
         env:
+        - name: MONGO_USER
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-username
+        - name: MONGO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-password
         - name: MONGO_URL
-          value: mongodb://admin:password@mongo-service:27017/myapp?authSource=admin
+          value: mongodb://$(MONGO_USER):$(MONGO_PASS)@mongo-service:27017/myapp?authSource=admin
 ---
 apiVersion: v1
 kind: Service
@@ -28,9 +38,9 @@ metadata:
   name: backend-service
   namespace: three-tier
 spec:
+  type: ClusterIP
   selector:
     app: backend
   ports:
     - port: 3000
       targetPort: 3000
-  type: LoadBalancer
