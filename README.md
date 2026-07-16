@@ -1,76 +1,45 @@
-Three-Tier Cloud-Native Stack
-Kubernetes | Node.js | MongoDB | GitHub Actions CI
+Three Tier Cloud Native Application on Kubernetes
 
-Overview: 📌
-This project is a full-stack three-tier architecture designed for high availability and automated delivery. It serves as a practical implementation of DevOps best practices, featuring containerized microservices, persistent database storage, and a robust Continuous Integration (CI) pipeline.
+This project serves as a practical implementation of a full-stack three-tier architecture designed for high availability and automated delivery. By leveraging Kubernetes, I established a resilient environment that manages containerized microservices, persistent database storage, and a robust continuous integration pipeline. This application demonstrates the core principles of modern infrastructure management through the lens of a cloud-native workflow.
+Architectural Rationale
 
-Architecture & Component Breakdown:
-Frontend: A lightweight, static web interface (Nginx-ready) providing a clean UI for user interaction.
+I chose this specific stack because it closely mirrors production environments found in major cloud providers. While a cloud environment would utilize managed services like Amazon RDS or Google Cloud SQL, I opted to deploy a containerized MongoDB instance within my cluster to maintain control over my data lifecycle and to practice managing persistent volumes manually. This approach provided me with a deeper understanding of how data persistence and stateful sets function under the hood of a Kubernetes cluster.
+Key Domains of Focus
 
-Backend: A RESTful Node.js API that manages business logic and serves as the bridge to the data layer.
+    Security: I prioritized securing my data layer by moving connection strings out of my codebase and into Kubernetes secrets. This prevents sensitive information from being exposed in version control. I implemented this because credential management is a foundational pillar of secure infrastructure and remains a primary concern in any DevOps lifecycle.
 
-Database: A stateful MongoDB instance utilizing PersistentVolumeClaims (PVC) to ensure data durability and state management within Kubernetes.
+    Networking: My networking strategy utilized an ingress controller to manage external access to the application. This is a standard practice that mimics how I would use a load balancer in a production cloud environment. I configured this to ensure that traffic is routed efficiently while keeping internal services hidden from the public internet.
 
-Infrastructure (IaC): Pure Kubernetes manifests defining the desired state for deployments, services, and ingress controllers.
+    Storage: Persistence was achieved through persistent volume claims. In a cloud environment, I would likely lean on dynamic provisioning from a cloud provider. Here, I implemented a custom configuration that allowed me to simulate that behavior, ensuring my database state persists even if my application pods are rescheduled or restarted.
 
-Technical Stack: 🛠️ 
-Orchestration: Kubernetes
+Challenges and Resolution
 
-CI: GitHub Actions
+Throughout the deployment process, I encountered hurdles that required significant investigation. The most frequent challenge involved troubleshooting pod failures or unauthorized access errors during authentication handshakes.
 
-Runtimes: Node.js (Backend), Static HTML/JS (Frontend)
+    Authentication Handshakes: I relied heavily on checking logs to diagnose these issues. By using the command line to inspect logs from specific pods, I could pinpoint exactly where the handshake between my identity provider and the API server was breaking down.
 
-Storage: MongoDB with Persistent Volumes
+    Persistent Volume Conflicts: I faced an error when trying to redeploy the MongoDB manifest, as the storage was still bound to a previous pod. I resolved this by identifying the orphaned Persistent Volume Claim (PVC) and cleaning up the stale resources to allow for a fresh binding to the new deployment.
 
-Networking: Ingress Controllers & K8s Services
+Deployment Guide
 
-Observability: Prometheus & Grafana (Configured via Helm Chats)
+To deploy this project on your local machine using Minikube, follow these steps in order. This sequence ensures that the infrastructure (namespaces and RBAC) is ready before the application components attempt to bind to them.
 
-CI Pipeline (GitHub Actions): 🤖
-The repository includes a production-grade CI pipeline that enforces code quality and build stability before any deployment.
+    Start Minikube with OIDC:
+    minikube start --extra-config=apiserver.oidc-issuer-url=[https://three-tier.local/dex](https://three-tier.local/dex) --extra-config=apiserver.oidc-client-id=kubernetes-cluster --extra-config=apiserver.oidc-ca-file=/var/lib/minikube/certs/ca.crt
+    Reasoning: The API server must be configured to trust the OIDC provider before any authentication can occur.
 
-Parallel Testing: Separates Frontend and Backend jobs to reduce build time.
+    Apply Namespaces:
+    kubectl apply -f namespace.yaml
+    Reasoning: Establishes the auth and three-tier isolation boundaries.
 
-Static Analysis: Implements htmlhint for the UI and npm lint for the API.
+    Deploy Auth and RBAC:
+    kubectl apply -f dex-rbac.yaml, kubectl apply -f enterprise-rbac.yaml, kubectl apply -f dex-stack.yaml
+    Reasoning: Identity management is a dependency for the application layer.
 
-Dry-Run Validation: Automatically validates Kubernetes YAML syntax using kubectl apply --dry-run to catch infrastructure bugs early.
+    Deploy Data Layer:
+    kubectl apply -f mongo-pv.yaml, kubectl apply -f mongo-pvc.yaml, kubectl apply -f mongo-secrets.yaml, kubectl apply -f mongo-deployment.yaml
+    Reasoning: Ensures the database is available to accept connections from the backend.
 
-Container Verification: Ensures Dockerfiles are functional by executing test builds of all images.
-
-📂 Repository Structure
-Bash
-.
-├── .github/workflows/  # Automated CI Pipeline logic
-├── backend/            # Node.js Server & Docker configuration
-├── frontend/           # index.html & static assets
-├── k8s/                # Kubernetes manifests (Deployments, PVC, Ingress)
-├── docker-compose.yml  # Local development environment
-└── README.md           # Documentation
-
-Getting Started: 🚀
-1. Prerequisites
-kubectl & docker
-
-A running Kubernetes cluster (Minikube)
-
-2. Deployment
-Clone the repository and apply the manifests:
-
-Bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
-kubectl apply -f k8s/
-3. Verify the Build
-Check the status of your pods and services:
-
-Bash
-kubectl get all -n default
-
-Future Roadmap: 📈 
-[ ] GitOps: Implementation of ArgoCD for automated CD (Continuous Deployment).
-
-[ ] Security: Integration of Trivy or Snyk for container vulnerability scanning.
-
-[ ] Service Mesh: Exploring Istio for advanced traffic management and mTLS.
-
-Author: Gerald Mtetwa
+    Deploy Application and Networking:
+    kubectl apply -f backend-deployment.yaml, kubectl apply -f frontend-deployment.yaml, kubectl apply -f network-policies.yaml, kubectl apply -f three-tier-ingress.yaml
+    Reasoning: The application and traffic management components rely on the previous layers being fully operational.
