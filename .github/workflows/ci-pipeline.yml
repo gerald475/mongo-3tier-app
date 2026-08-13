@@ -1,4 +1,4 @@
-name: Project CI Pipeline
+name: Project CI/CD Pipeline
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # 1. Backend CI: Handles your Node.js server (server.js)
+  # 1. Backend CI: Handles your Node.js server
   backend-ci:
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +29,6 @@ jobs:
       - name: Backend Lint & Test
         run: |
           cd backend
-          # Runs 'lint' and 'test' scripts defined in your package.json
           npm run lint --if-present
           npm test --if-present
 
@@ -42,7 +41,6 @@ jobs:
 
       - name: Lint HTML
         run: |
-          # Install a simple HTML linter to check for syntax errors in index.html
           npm install -g htmlhint
           htmlhint "frontend/**/*.html"
 
@@ -55,10 +53,9 @@ jobs:
 
       - name: Validate K8s YAML Syntax
         run: |
-          # Ensures your deployments and ingress are valid
           kubectl apply --dry-run=client -f k8s/
 
-  # 4. Build Check: Ensures Dockerfiles are functional
+  # 4. Build Check: Ensures Dockerfiles build successfully
   docker-check:
     needs: [backend-ci, frontend-ci, k8s-lint]
     runs-on: ubuntu-latest
@@ -72,16 +69,50 @@ jobs:
       - name: Build Frontend Image
         run: docker build ./frontend -t frontend-test:latest
 
+  # 5. Secret Scanning: Prevents accidental credential leaks
   secret-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history so it can scan previous commits too
+          fetch-depth: 0
 
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: false # This stops the pipeline if a secret is found!
+        continue-on-error: false
+
+  # 6. Publish Images: Pushes newly built images to Docker Hub on push to main
+  publish-images:
+    needs: [docker-check, secret-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            techgangsta/mongo-3tier-backend:${{ github.sha }}
+            techgangsta/mongo-3tier-backend:latest
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            techgangsta/mongo-3tier-frontend:${{ github.sha }}
+            techgangsta/mongo-3tier-frontend:latest
