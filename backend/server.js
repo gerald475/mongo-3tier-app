@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const { MongoClient } = require("mongodb");
 const path = require("path");
 const cors = require("cors");
+const client = require('prom-client');
 
 const app = express();
 const PORT = 3000;
@@ -66,3 +67,19 @@ app.get("/db/users", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+
+// Enable default system/process metrics
+client.collectDefaultMetrics();
+
+// Endpoint for Prometheus to scrape
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
+
+
+"scripts": {
+    "start": "node server.js",
+    "test": "echo \"No unit tests specified yet\" && exit 0"
+  }

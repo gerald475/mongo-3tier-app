@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: three-tier-backend-monitor
+  namespace: three-tier
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: backend # Make sure this label matches your Node.js Service labels
+  endpoints:
+  - port: http # Make sure this matches your Service port name
+    path: /metrics
+    interval: 15s

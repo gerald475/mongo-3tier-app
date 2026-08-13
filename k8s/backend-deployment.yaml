@@ -37,10 +37,13 @@ kind: Service
 metadata:
   name: backend-service
   namespace: three-tier
+  labels:
+    app: backend  # Added here so the service itself carries the app label
 spec:
   type: ClusterIP
   selector:
     app: backend
   ports:
-    - port: 3000
+    - name: http
+      port: 3000
       targetPort: 3000
