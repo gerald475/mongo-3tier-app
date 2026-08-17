@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Pluto
-        uses: FairwindsOps/pluto/action@v5
+        uses: FairwindsOps/pluto/action@v5.1.0
 
       - name: Validate K8s Manifests
         run: pluto detect-files -d k8s/
