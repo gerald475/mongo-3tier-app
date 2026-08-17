@@ -51,13 +51,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Prometheus CRDs for Validation
-        run: |
-          kubectl apply --server-side --dry-run=client -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml || true
+      - name: Install Pluto
+        uses: FairwindsOps/pluto/action@v5
 
-      - name: Validate K8s YAML Syntax
-        run: |
-          kubectl apply --dry-run=client --validate=false -f k8s/
+      - name: Validate K8s Manifests
+        run: pluto detect-files -d k8s/
 
   # 4. Build Check: Ensures Dockerfiles build successfully
   docker-check:
