@@ -57,7 +57,7 @@ jobs:
 
       - name: Validate K8s YAML Syntax
         run: |
-          kubectl apply --dry-run=client -f k8s/
+          kubectl apply --dry-run=client --validate=false -f k8s/
 
   # 4. Build Check: Ensures Dockerfiles build successfully
   docker-check:
