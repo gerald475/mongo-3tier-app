@@ -8,6 +8,9 @@ const client = require('prom-client');
 const app = express();
 const PORT = 3000;
 
+// Enable Prometheus metrics collection
+client.collectDefaultMetrics();
+
 // MongoDB config
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = "myapp";
@@ -18,13 +21,13 @@ app.use(cors({
   allowedHeaders: ["Content-Type"]
 }));
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(express.json());
 
-// Serve frontend
-//app.use(
- // express.static(path.join(__dirname, "../frontend/public"))
-//);
+// Endpoint for Prometheus to scrape
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 let db;
 
@@ -67,19 +70,3 @@ app.get("/db/users", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-// Enable default system/process metrics
-client.collectDefaultMetrics();
-
-// Endpoint for Prometheus to scrape
-app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', client.register.contentType);
-  res.end(await client.register.metrics());
-});
-
-
-"scripts": {
-    "start": "node server.js",
-    "test": "echo \"No unit tests specified yet\" && exit 0"
-  }
