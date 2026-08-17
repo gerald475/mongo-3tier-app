@@ -51,10 +51,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Pluto
-        uses: FairwindsOps/pluto@v5.1.0
+      - name: Install Pluto Binary
+        run: |
+          curl -sSL https://github.com/FairwindsOps/pluto/releases/download/v5.18.0/pluto_5.18.0_linux_amd64.tar.gz | tar xz
+          sudo mv pluto /usr/local/bin/
 
-      - name: Validate K8s Manifests
+      - name: Validate K8s Deprecations
         run: pluto detect-files -d k8s/
 
   # 4. Build Check: Ensures Dockerfiles build successfully
