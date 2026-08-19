@@ -118,5 +118,5 @@ jobs:
           context: ./frontend
           push: true
           tags: |
-            techgangsta/mongo-3tier-frontend:${{ github.sha }}
-            techgangsta/mongo-3tier-frontend:latest
+            t3chgangsta/mongo-3tier-frontend:${{ github.sha }}
+            t3chgangsta/mongo-3tier-frontend:latest
