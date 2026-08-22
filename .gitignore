@@ -1,3 +1,5 @@
 backend/node_modules
 .env
 node_modules/
+Grafana_pass
+Prometheus_pass

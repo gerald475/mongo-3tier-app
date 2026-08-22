@@ -37,6 +37,10 @@ kind: Service
 metadata:
   name: backend-service
   namespace: three-tier
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "3000"
   labels:
     app: backend  # Added here so the service itself carries the app label
 spec:
